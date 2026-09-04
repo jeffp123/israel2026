@@ -1,0 +1,30 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+type GlobRecord = Record<string, { default: ImageMetadata }>;
+
+interface Props {
+  images: GlobRecord | ImageMetadata[];
+  captions?: string[];
+}
+
+const { images, captions = [] } = Astro.props;
+
+const rawImages: ImageMetadata[] = Array.isArray(images)
+  ? images
+  : Object.values(images as GlobRecord).map((mod) => mod.default);
+---
+<div class="carousel bleed-wide swiper">
+  <div class="swiper-wrapper">
+    {rawImages.map((img, i) => (
+      <div class="swiper-slide">
+        <Image src={img} alt={captions[i] ?? ''} />
+        {captions[i] && <figcaption>{captions[i]}</figcaption>}
+      </div>
+    ))}
+  </div>
+  <div class="swiper-button-prev"></div>
+  <div class="swiper-button-next"></div>
+  <div class="swiper-pagination"></div>
+</div>

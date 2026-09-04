@@ -1,0 +1,38 @@
+---
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+type GlobRecord = Record<string, { default: ImageMetadata }>;
+
+interface Props {
+  images: GlobRecord | ImageMetadata[];
+  captions?: string[];
+}
+
+const { images, captions = [] } = Astro.props;
+
+const rawImages: ImageMetadata[] = Array.isArray(images)
+  ? images
+  : Object.values(images as GlobRecord).map((mod) => mod.default);
+
+const processed = await Promise.all(
+  rawImages.map(async (img) => {
+    const thumb = await getImage({ src: img, width: 500, height: 500, fit: 'cover', format: 'webp' });
+    const full = await getImage({ src: img, width: 2000, format: 'webp' });
+    return { thumb, full, img };
+  })
+);
+---
+<div class="gallery bleed-wide">
+  {processed.map(({ thumb, full, img }, i) => (
+    <a href={full.src} data-pswp-width={img.width} data-pswp-height={img.height}>
+      <img
+        src={thumb.src}
+        width={thumb.attributes.width}
+        height={thumb.attributes.height}
+        loading="lazy"
+        alt={captions[i] ?? ''}
+      />
+    </a>
+  ))}
+</div>

@@ -1,0 +1,24 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  caption?: string;
+  variant?: 'inline' | 'left' | 'right' | 'framed' | 'wide' | 'full';
+}
+
+const { src, alt, caption, variant = 'inline' } = Astro.props;
+
+const classes = [
+  'figure',
+  `figure--${variant}`,
+  variant === 'wide' ? 'bleed-wide' : '',
+  variant === 'full' ? 'bleed-full' : '',
+].filter(Boolean).join(' ');
+---
+<figure class={classes}>
+  <Image {src} {alt} />
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>

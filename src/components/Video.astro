@@ -1,0 +1,17 @@
+---
+interface Props {
+  src?: string;
+  embed?: string;
+  poster?: string;
+}
+const { src, embed, poster } = Astro.props;
+---
+<div class="video bleed-wide">
+  {src ? (
+    <video controls playsinline poster={poster}>
+      <source src={src} type="video/mp4" />
+    </video>
+  ) : embed ? (
+    <iframe src={embed} allowfullscreen loading="lazy" title="Video" />
+  ) : null}
+</div>

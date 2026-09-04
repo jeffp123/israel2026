@@ -1,0 +1,19 @@
+---
+import { getCollection, render } from 'astro:content';
+import EntryLayout from '../../layouts/EntryLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('entries');
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const h2s = headings.filter((h) => h.depth === 2);
+---
+<EntryLayout data={entry.data} headings={h2s}>
+  <Content />
+</EntryLayout>
