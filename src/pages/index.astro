@@ -26,7 +26,7 @@ allEntries.sort((a, b) => a.data.date.getTime() - b.data.date.getTime());
       <ol class="entry-list">
         {allEntries.map((entry) => (
           <li>
-            <a href={'/entries/' + entry.id}>
+            <a href={import.meta.env.BASE_URL.replace(/\/$/, '') + '/entries/' + entry.id}>
               {entry.data.cover && <Image src={entry.data.cover} alt="" />}
               <h2>{entry.data.title}</h2>
               <time datetime={entry.data.date.toISOString()}>
