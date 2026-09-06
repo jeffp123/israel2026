@@ -118,9 +118,18 @@ for f in "$@"; do
   done
 
   if [ "$is_video" = "1" ]; then
-    cp "$f" "$dest_dir/$out_name"
+    if ! cp "$f" "$dest_dir/$out_name"; then
+      rm -f "$dest_dir/$out_name"
+      skip=$((skip + 1))
+      continue
+    fi
   else
-    "$MAGICK" "$working_file" -resize '2400x2400>' -quality 82 "$dest_dir/$out_name"
+    if ! "$MAGICK" "$working_file" -resize '2400x2400>' -quality 82 "$dest_dir/$out_name"; then
+      rm -f "$dest_dir/$out_name"
+      [ -n "$cleanup_tmp" ] && rm -f "$cleanup_tmp"
+      skip=$((skip + 1))
+      continue
+    fi
     [ -n "$cleanup_tmp" ] && rm -f "$cleanup_tmp"
   fi
 
