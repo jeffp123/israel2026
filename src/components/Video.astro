@@ -5,11 +5,19 @@ interface Props {
   poster?: string;
 }
 const { src, embed, poster } = Astro.props;
+
+const EXT_TYPES: Record<string, string> = {
+  mp4: 'video/mp4',
+  mov: 'video/quicktime',
+  webm: 'video/webm',
+};
+const ext = src?.split('.').pop()?.toLowerCase() ?? '';
+const mimeType = EXT_TYPES[ext] ?? 'video/mp4';
 ---
 <div class="video bleed-wide">
   {src ? (
     <video controls playsinline poster={poster}>
-      <source src={src} type="video/mp4" />
+      <source src={src} type={mimeType} />
     </video>
   ) : embed ? (
     <iframe src={embed} allowfullscreen loading="lazy" title="Video" />

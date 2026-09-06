@@ -4,9 +4,53 @@ A photo journal of the Peck family's 2026 trip to Israel, built with Astro. Depl
 automatically via GitHub Actions (`.github/workflows/deploy.yml`) to GitHub Pages at
 https://jeffp123.github.io/israel2026/ on every push to `main`.
 
-This is the current state of the project as of 2026-09-04. The import workflow and existing
+This is the current state of the project as of 2026-09-06. The import workflow and existing
 entries are expected to keep changing as the trip and the site evolve — treat what's below as
 a snapshot to verify against the actual code, not a fixed spec.
+
+## Current status: writing, not curating
+
+Every day from `2026-07-29` through `2026-08-24` has already been through a photo-curation
+pass: each `src/assets/<date>/` folder has been split into `<HHMMSS>-<slug>/` event subfolders
+(see the folder convention below), and each corresponding `src/content/entries/journal-<date>.mdx`
+has been rewritten with a `## heading` + **one placeholder sentence of factual description**
+per group, in chronological order. `2026-07-05` through `2026-07-28` predate that pass and may
+still be flat or only partially curated (`second-wave.mdx` is a fully hand-written exception,
+not a placeholder).
+
+**The actual work remaining is writing** — replacing those placeholder sentences with real
+narrative content about what happened, in Jeff's own voice. The grouping and one-liners exist
+purely so that writing an entry means opening one `.mdx` file and expanding prose section by
+section, not hunting through a flat dump of hundreds of files first.
+
+A few things worth knowing before diving in:
+
+- **Entries don't need to map 1:1 with date folders.** A single day's photos can be split
+  across multiple entries (e.g. pulling a standalone reflection out of a day), and entries can
+  be renamed, merged, or reordered independently of how the underlying `src/assets/<date>/`
+  folders are laid out — the only hard requirement is that each `<Photos glob="...">` in an
+  `.mdx` still resolves to a real folder. Moving or renaming an asset subfolder means updating
+  every glob that pointed at it, and updating `cover` frontmatter if it pointed at a file that moved.
+- **Some auto-generated folder slugs may be wrong.** They were assigned by (mostly automated)
+  clustering agents based on timestamp + GPS + a quick look at one representative photo per
+  group — a couple were caught and fixed after the fact because the slug didn't match what was
+  actually in the photos (e.g. a folder named for "the apartment" that was actually a nighttime
+  street scene). If a section's photos don't match its heading/description while writing, fix
+  the folder name and glob together rather than writing around the mismatch.
+- **Large single-folder groups are usually intentional**, not a clustering failure — a few
+  events (a ~90-minute guided tour, a long café stop, a mall visit with a movie-length gap in
+  the middle) were deliberately kept as one folder because GPS and visual content stayed
+  consistent throughout, even though the photo count is high.
+- **Video playback is a known open issue**, unrelated to writing: the `.mov` clips (currently
+  only on `2026-07-29`) are HEVC-encoded and won't play in Chrome/Firefox regardless of the
+  `<video>` MIME type (`Video.astro` already picks the right MIME type per extension — that
+  part is correct). The real fix is transcoding each clip to H.264 `.mp4` with `ffmpeg`, not
+  yet done.
+- If photos need to be moved, re-grouped, split, or re-described again — either because a
+  slug turned out wrong or because entries are being reorganized independently of dates — see
+  `.claude/skills/photo-journal-curation/SKILL.md` for the process (GPS/timestamp extraction,
+  clustering heuristics, the `.mdx` pattern, and the `?url` import required for videos) so it
+  doesn't need to be re-derived from scratch.
 
 ## Content model
 
@@ -36,10 +80,14 @@ Photos/videos are dropped onto an "Import to israel2026" droplet app, which runs
 - Writes to `src/assets/<YYYY-MM-DD>/<HHMMSS>.<ext>`, suffixing `-2`, `-3`, etc. on same-second
   collisions (e.g. burst shots).
 
-So each `src/assets/<date>/` folder is a chronological dump of that day's media, named by
-capture time. Subfolders (e.g. `2026-07-27/ricotta/`, `2026-07-27/train/`) are created
-manually when curating an entry, to group a batch of photos for a `<Gallery>` or
-`<Carousel>`.
+So each `src/assets/<date>/` folder starts as a chronological dump of that day's media, named
+by capture time — but for every date from `2026-07-29` onward it has already been split into
+`<HHMMSS>-<slug>/` subfolders (e.g. `2026-07-29/172314-machane-yehuda-market/`), one per
+real-world event, so an entry's `<Photos>` blocks can just glob each subfolder. The slug is a
+short factual description of what's in the photos (a place, activity, or landmark), assigned
+by clustering consecutive photos on capture time and embedded GPS, then confirming visually.
+New imports (or any further re-curation) should follow the same convention — see
+`.claude/skills/photo-journal-curation/SKILL.md` for the full process.
 
 When writing an entry, reference images from these date folders — either individual files
 (`import('/src/assets/2026-07-27/091626.jpg')`) or a subfolder glob
