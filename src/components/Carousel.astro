@@ -15,7 +15,7 @@ const rawImages: ImageMetadata[] = Array.isArray(images)
   ? images
   : Object.values(images as GlobRecord).map((mod) => mod.default);
 ---
-<div class="carousel bleed-wide swiper">
+<div class="carousel swiper">
   <div class="swiper-wrapper">
     {rawImages.map((img, i) => (
       <div class="swiper-slide">

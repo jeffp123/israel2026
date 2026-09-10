@@ -14,7 +14,7 @@ const EXT_TYPES: Record<string, string> = {
 const ext = src?.split('.').pop()?.toLowerCase() ?? '';
 const mimeType = EXT_TYPES[ext] ?? 'video/mp4';
 ---
-<div class="video bleed-wide">
+<div class="video">
   {src ? (
     <video controls playsinline poster={poster}>
       <source src={src} type={mimeType} />

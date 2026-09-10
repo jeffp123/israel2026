@@ -93,7 +93,7 @@ const gridItems = isGrid
   : [];
 ---
 {isGrid ? (
-  <div class="gallery bleed-wide">
+  <div class="gallery">
     {gridItems.map(({ thumb, full, image, alt }) => (
       <a href={full.src} data-pswp-width={image.width} data-pswp-height={image.height}>
         <img

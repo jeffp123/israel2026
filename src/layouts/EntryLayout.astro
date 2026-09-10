@@ -1,17 +1,22 @@
 ---
-import '../styles/global.css';
-import '@fontsource-variable/fraunces';
-import '@fontsource/ibm-plex-sans/400.css';
-import '@fontsource/ibm-plex-sans/500.css';
-import '@fontsource/ibm-plex-sans/600.css';
-import 'photoswipe/style.css';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
+import "../styles/global.css";
+import "@fontsource-variable/fraunces";
+import "@fontsource/ibm-plex-sans/400.css";
+import "@fontsource/ibm-plex-sans/500.css";
+import "@fontsource/ibm-plex-sans/600.css";
+import "photoswipe/style.css";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
-import { Image } from 'astro:assets';
-import Toc from '../components/Toc.astro';
-import type { ImageMetadata } from 'astro';
+import { Image } from "astro:assets";
+import Toc from "../components/Toc.astro";
+import type { ImageMetadata } from "astro";
+
+interface EntryRef {
+  id: string;
+  data: { title: string };
+}
 
 interface Props {
   data: {
@@ -22,15 +27,22 @@ interface Props {
     cover?: ImageMetadata;
   };
   headings: { depth: number; slug: string; text: string }[];
+  prev?: EntryRef | null;
+  next?: EntryRef | null;
 }
 
-const { data, headings } = Astro.props;
+const { data, headings, prev, next } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-const dateStr = data.date.toLocaleDateString('en-US', {
-  year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC',
+const dateStr = data.date.toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
 });
-const kicker = [data.location, dateStr].filter(Boolean).join(' · ');
+const kicker = [data.location, dateStr].filter(Boolean).join(" · ");
 ---
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -43,25 +55,51 @@ const kicker = [data.location, dateStr].filter(Boolean).join(' · ');
       <header class="hero">
         {data.cover && <Image src={data.cover} alt="" />}
         <div class="hero-caption">
+          <a class="home-link" href={`${base}/`}>Peck Family in Israel 2026</a>
           {kicker && <p class="kicker">{kicker}</p>}
           <h1 class="entry-title">{data.title}</h1>
           {data.dek && <p class="dek">{data.dek}</p>}
         </div>
       </header>
 
-      {headings.length > 0 && (
-        <>
-          <details class="toc-mobile">
-            <summary>On this page</summary>
-            <Toc headings={headings} />
-          </details>
-          <aside class="toc-rail">
-            <Toc headings={headings} />
-          </aside>
-        </>
-      )}
+      {
+        headings.length > 0 && (
+          <>
+            <details class="toc-mobile">
+              <summary>On this page</summary>
+              <Toc headings={headings} />
+            </details>
+            <aside class="toc-rail at-top">
+              <Toc headings={headings} />
+            </aside>
+          </>
+        )
+      }
 
       <slot />
+
+      {
+        (prev || next) && (
+          <nav class="entry-nav" aria-label="Entry navigation">
+            {prev ? (
+              <a class="entry-nav-prev" href={`${base}/entries/${prev.id}`}>
+                <span class="entry-nav-label">← Previous</span>
+                <span class="entry-nav-title">{prev.data.title}</span>
+              </a>
+            ) : (
+              <span />
+            )}
+            {next ? (
+              <a class="entry-nav-next" href={`${base}/entries/${next.id}`}>
+                <span class="entry-nav-label">Next →</span>
+                <span class="entry-nav-title">{next.data.title}</span>
+              </a>
+            ) : (
+              <span />
+            )}
+          </nav>
+        )
+      }
 
       <footer>
         <p>© {new Date().getFullYear()}</p>
@@ -69,37 +107,75 @@ const kicker = [data.location, dateStr].filter(Boolean).join(' · ');
     </main>
 
     <script>
-      import PhotoSwipeLightbox from 'photoswipe/lightbox';
-      document.querySelectorAll('.gallery').forEach((g, i) => {
-        if (!g.id) g.id = 'gallery-' + i;
+      import PhotoSwipeLightbox from "photoswipe/lightbox";
+      document.querySelectorAll(".gallery").forEach((g, i) => {
+        if (!g.id) g.id = "gallery-" + i;
         new PhotoSwipeLightbox({
-          gallery: '#' + g.id, children: 'a',
-          pswpModule: () => import('photoswipe'),
+          gallery: "#" + g.id,
+          children: "a",
+          pswpModule: () => import("photoswipe"),
         }).init();
       });
 
-      import Swiper from 'swiper';
-      import { Navigation, Pagination, Keyboard, A11y } from 'swiper/modules';
-      document.querySelectorAll('.carousel').forEach((el) => {
+      import Swiper from "swiper";
+      import { Navigation, Pagination, Keyboard, A11y } from "swiper/modules";
+      document.querySelectorAll(".carousel").forEach((el) => {
         new Swiper(el as HTMLElement, {
           modules: [Navigation, Pagination, Keyboard, A11y],
-          slidesPerView: 1, spaceBetween: 8, keyboard: { enabled: true },
-          navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-          pagination: { el: '.swiper-pagination', clickable: true },
+          slidesPerView: 1,
+          spaceBetween: 8,
+          keyboard: { enabled: true },
+          navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+          },
+          pagination: { el: ".swiper-pagination", clickable: true },
           breakpoints: { 768: { slidesPerView: 1.15 } },
         });
       });
 
+      const tocRail = document.querySelector(".toc-rail") as HTMLElement | null;
+      const hero = document.querySelector(".hero") as HTMLElement | null;
+      if (tocRail && hero) {
+        const GAP = 24;
+        const updateTocPosition = () => {
+          if (window.scrollY > 0) {
+            tocRail.classList.remove("at-top");
+            tocRail.style.top = "";
+            tocRail.style.maxHeight = "";
+          } else {
+            const heroBottom = hero.getBoundingClientRect().bottom;
+            tocRail.classList.add("at-top");
+            tocRail.style.top = `${heroBottom + GAP}px`;
+            tocRail.style.maxHeight = `${Math.max(200, window.innerHeight - heroBottom - GAP * 2)}px`;
+          }
+        };
+        updateTocPosition();
+        window.addEventListener("scroll", updateTocPosition, { passive: true });
+        window.addEventListener("resize", updateTocPosition);
+      }
+
       const links = new Map(
-        [...document.querySelectorAll('.toc a')].map((a) => [a.getAttribute('href')!.slice(1), a])
+        [...document.querySelectorAll(".toc a")].map((a) => [
+          a.getAttribute("href")!.slice(1),
+          a,
+        ]),
       );
-      const spy = new IntersectionObserver((entries) => {
-        for (const e of entries) if (e.isIntersecting) {
-          document.querySelectorAll('.toc a.is-current').forEach((a) => a.classList.remove('is-current'));
-          links.get((e.target as HTMLElement).id)?.classList.add('is-current');
-        }
-      }, { rootMargin: '0px 0px -70% 0px' });
-      document.querySelectorAll('main h2[id]').forEach((h) => spy.observe(h));
+      const spy = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries)
+            if (e.isIntersecting) {
+              document
+                .querySelectorAll(".toc a.is-current")
+                .forEach((a) => a.classList.remove("is-current"));
+              links
+                .get((e.target as HTMLElement).id)
+                ?.classList.add("is-current");
+            }
+        },
+        { rootMargin: "0px 0px -70% 0px" },
+      );
+      document.querySelectorAll("main h2[id]").forEach((h) => spy.observe(h));
     </script>
   </body>
 </html>

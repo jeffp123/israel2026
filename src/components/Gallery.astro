@@ -23,7 +23,7 @@ const processed = await Promise.all(
   })
 );
 ---
-<div class="gallery bleed-wide">
+<div class="gallery">
   {processed.map(({ thumb, full, img }, i) => (
     <a href={full.src} data-pswp-width={img.width} data-pswp-height={img.height}>
       <img
