@@ -55,7 +55,7 @@ figcaption{font-family:var(--font-display);font-style:italic;color:var(--text-di
 .figure--framed img{border:1px solid var(--rule);padding:var(--size-3);
   background:var(--bg-raised);border-radius:2px;max-width:min(100%,40rem)}
 .gallery{display:grid;gap:var(--size-2);margin-block:var(--size-6);justify-content:center;
-  grid-template-columns:repeat(auto-fit,minmax(clamp(7rem,22vw,11rem),11rem))}
+  grid-template-columns:repeat(auto-fit,minmax(max(7rem,calc((100% - (var(--cols,4) - 1)*var(--size-2))/var(--cols,4))),1fr))}
 .gallery a{display:block;aspect-ratio:1;overflow:hidden;border-radius:3px;background:var(--bg-raised)}
 .gallery img{width:100%;height:100%;object-fit:cover;transition:transform .4s var(--ease-3,ease)}
 @media (prefers-reduced-motion:no-preference){.gallery a:hover img{transform:scale(1.05)}}
@@ -63,8 +63,16 @@ figcaption{font-family:var(--font-display);font-style:italic;color:var(--text-di
 .carousel .swiper-slide img{width:100%;aspect-ratio:3/2;object-fit:cover}
 .carousel .swiper-button-next,.carousel .swiper-button-prev{color:var(--brass)}
 .carousel .swiper-pagination-bullet-active{background:var(--brass)}
-.video{aspect-ratio:16/9;margin-block:var(--size-6);border-radius:4px;overflow:hidden;background:#000}
-.video>*{width:100%;height:100%;border:0;object-fit:cover}
+.video{aspect-ratio:16/9;margin-block:var(--size-6);border-radius:4px;overflow:hidden;
+  background:#000;position:relative}
+.video video,.video iframe{width:100%;height:100%;border:0;object-fit:cover;display:block}
+.video-play{position:absolute;inset:0;margin:auto;width:clamp(3.5rem,12vw,5rem);height:clamp(3.5rem,12vw,5rem);
+  display:flex;align-items:center;justify-content:center;padding:0;border-radius:50%;
+  background:color-mix(in srgb,var(--bg) 55%,transparent);border:2px solid color-mix(in srgb,var(--text) 70%,transparent);
+  color:var(--text);cursor:pointer;transition:background .2s ease,transform .2s ease}
+.video-play svg{width:40%;height:40%;margin-left:8%;fill:currentColor}
+.video-play:hover{background:color-mix(in srgb,var(--brass) 70%,transparent);transform:scale(1.06)}
+.video.is-playing .video-play{display:none}
 .toc{font-family:var(--font-body);font-size:.95rem}
 .toc ol{list-style:none;padding:0;display:grid;gap:var(--size-2)}
 .toc a{color:var(--text-dim);text-decoration:none}

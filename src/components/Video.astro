@@ -1,10 +1,45 @@
 ---
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
 interface Props {
+  /** A literal path into src/assets, e.g.
+   * "/src/assets/2026-07-29/172314-street-piano/172314.mp4" — resolved internally, no
+   * manual `import '...mp4?url'` needed. An already-resolved URL string also still works. */
   src?: string;
   embed?: string;
+  /** Explicit poster override. If omitted and `src` is a literal src/assets path, a
+   * "<name>-poster.jpg" sibling is used automatically when present (see
+   * scripts/generate-video-posters.sh). */
   poster?: string;
 }
-const { src, embed, poster } = Astro.props;
+const { src, embed, poster: posterProp } = Astro.props;
+
+// Same glob-and-lookup trick as Photos.astro: resolves a literal src/assets path to its
+// final URL without requiring a manual `import '...mp4?url'` per video in every entry.
+const allVideos = import.meta.glob<string>(
+  '/src/assets/**/*.{mp4,mov,webm,MP4,MOV,WEBM}',
+  { query: '?url', import: 'default', eager: true },
+);
+const allPosters = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/**/*-poster.jpg',
+);
+
+let resolvedSrc = src;
+let posterSrc: string | undefined = posterProp;
+
+if (src && src in allVideos) {
+  resolvedSrc = allVideos[src];
+  if (!posterSrc) {
+    const posterPath = src.replace(/\.\w+$/, '-poster.jpg');
+    const loadPoster = allPosters[posterPath];
+    if (loadPoster) {
+      const mod = await loadPoster();
+      const optimized = await getImage({ src: mod.default, width: 1000, format: 'webp' });
+      posterSrc = optimized.src;
+    }
+  }
+}
 
 const EXT_TYPES: Record<string, string> = {
   mp4: 'video/mp4',
@@ -15,11 +50,28 @@ const ext = src?.split('.').pop()?.toLowerCase() ?? '';
 const mimeType = EXT_TYPES[ext] ?? 'video/mp4';
 ---
 <div class="video">
-  {src ? (
-    <video controls playsinline poster={poster}>
-      <source src={src} type={mimeType} />
-    </video>
+  {resolvedSrc ? (
+    <>
+      <video controls playsinline poster={posterSrc}>
+        <source src={resolvedSrc} type={mimeType} />
+      </video>
+      <button type="button" class="video-play" aria-label="Play video">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+      </button>
+    </>
   ) : embed ? (
     <iframe src={embed} allowfullscreen loading="lazy" title="Video" />
   ) : null}
 </div>
+
+<script>
+  document.querySelectorAll('.video').forEach((wrap) => {
+    const video = wrap.querySelector('video');
+    const button = wrap.querySelector('.video-play');
+    if (!video || !button) return;
+    button.addEventListener('click', () => video.play());
+    video.addEventListener('play', () => wrap.classList.add('is-playing'));
+    video.addEventListener('pause', () => wrap.classList.remove('is-playing'));
+    video.addEventListener('ended', () => wrap.classList.remove('is-playing'));
+  });
+</script>

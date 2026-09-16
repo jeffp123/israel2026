@@ -1,6 +1,6 @@
 ---
-import { Image, getImage } from 'astro:assets';
-import type { ImageMetadata } from 'astro';
+import { Image, getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
 
 interface Props {
   /** A glob pattern, e.g. "/src/assets/2026-07-27/train/*.jpg". Matches are sorted by path
@@ -16,33 +16,39 @@ const { glob, sources } = Astro.props;
 // Vite's import.meta.glob requires a literal pattern at the call site — it can't take a
 // runtime variable — so we glob everything once here and filter/look up against the result.
 const allImages = import.meta.glob<{ default: ImageMetadata }>(
-  '/src/assets/**/*.{jpg,jpeg,png,JPG,JPEG,PNG}'
+  "/src/assets/**/*.{jpg,jpeg,png,JPG,JPEG,PNG}",
 );
 
 function globToRegExp(pattern: string): RegExp {
   const body = pattern
     .split(/(\*\*|\*)/)
     .map((part) => {
-      if (part === '**') return '.*';
-      if (part === '*') return '[^/]*';
-      return part.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+      if (part === "**") return ".*";
+      if (part === "*") return "[^/]*";
+      return part.replace(/[.+^${}()|[\]\\]/g, "\\$&");
     })
-    .join('');
-  return new RegExp('^' + body + '$');
+    .join("");
+  return new RegExp("^" + body + "$");
 }
 
 let paths: string[];
 if (glob) {
   const re = globToRegExp(glob);
-  paths = Object.keys(allImages).filter((p) => re.test(p)).sort();
+  paths = Object.keys(allImages)
+    .filter((p) => re.test(p))
+    .sort();
   if (paths.length === 0) {
-    throw new Error(`<Photos glob="${glob}"> matched no images under src/assets.`);
+    throw new Error(
+      `<Photos glob="${glob}"> matched no images under src/assets.`,
+    );
   }
 } else if (sources && sources.length > 0) {
   paths = sources;
   for (const p of paths) {
     if (!(p in allImages)) {
-      throw new Error(`<Photos sources> references an image that doesn't exist: ${p}`);
+      throw new Error(
+        `<Photos sources> references an image that doesn't exist: ${p}`,
+      );
     }
   }
 } else {
@@ -50,21 +56,31 @@ if (glob) {
 }
 
 const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 // Derives a plain, factual alt text from the capture-time path convention documented in
 // AGENTS.md: src/assets/<YYYY-MM-DD>/[subfolder/]<HHMMSS>[-n].<ext>
 function altFromPath(path: string): string {
   const m = path.match(
-    /\/src\/assets\/(\d{4})-(\d{2})-(\d{2})\/(?:.*\/)?(\d{2})(\d{2})(\d{2})(?:-\d+)?\.\w+$/
+    /\/src\/assets\/(\d{4})-(\d{2})-(\d{2})\/(?:.*\/)?(\d{2})(\d{2})(\d{2})(?:-\d+)?\.\w+$/,
   );
-  if (!m) return '';
+  if (!m) return "";
   const [, year, month, day, hh, mm] = m;
   const monthName = MONTHS[Number(month) - 1];
   const hour24 = Number(hh);
-  const ampm = hour24 >= 12 ? 'PM' : 'AM';
+  const ampm = hour24 >= 12 ? "PM" : "AM";
   const hour12 = hour24 % 12 || 12;
   return `Photo from ${monthName} ${Number(day)}, ${year}, ${hour12}:${mm} ${ampm}`;
 }
@@ -73,43 +89,86 @@ const photos = await Promise.all(
   paths.map(async (path) => {
     const mod = await allImages[path]();
     return { image: mod.default, alt: altFromPath(path) };
-  })
+  }),
 );
 
 // A handful of photos reads better as full, uncropped, framed figures; a lot of photos reads
 // better as a compact grid. Somewhere around 5 is where scrolling past framed figures starts
 // to feel tedious instead of narrative.
-const GRID_THRESHOLD = 5;
+const GRID_THRESHOLD = 3;
 const isGrid = photos.length >= GRID_THRESHOLD;
+
+// Picks a column count that keeps rows balanced instead of whatever the viewport happens to
+// fit (e.g. 4 photos at 3-per-row leaves one orphaned on its own row below). Scores each
+// candidate column count (up to a cap matching the widest the thumbnail grid naturally
+// supports) by how full the last row is and how close it is to a square-ish layout, and
+// heavily penalizes a lone leftover photo on the final row.
+function idealColumns(n: number): number {
+  if (n <= 1) return 1;
+  const maxCols = Math.min(n, 4);
+  let best = maxCols;
+  let bestScore = -Infinity;
+  for (let cols = 2; cols <= maxCols; cols++) {
+    const remainder = n % cols;
+    const orphan = remainder === 1 && n > cols;
+    const emptyCells = remainder === 0 ? 0 : cols - remainder;
+    const score =
+      -emptyCells - (orphan ? 2 : 0) - Math.abs(cols - Math.sqrt(n)) * 0.1;
+    if (score > bestScore) {
+      bestScore = score;
+      best = cols;
+    }
+  }
+  return best;
+}
+
+const cols = isGrid ? idealColumns(photos.length) : 0;
 
 const gridItems = isGrid
   ? await Promise.all(
       photos.map(async ({ image, alt }) => {
-        const thumb = await getImage({ src: image, width: 500, height: 500, fit: 'cover', format: 'webp' });
-        const full = await getImage({ src: image, width: 2000, format: 'webp' });
+        const thumb = await getImage({
+          src: image,
+          width: 500,
+          height: 500,
+          fit: "cover",
+          format: "webp",
+        });
+        const full = await getImage({
+          src: image,
+          width: 2000,
+          format: "webp",
+        });
         return { thumb, full, image, alt };
-      })
+      }),
     )
   : [];
 ---
-{isGrid ? (
-  <div class="gallery">
-    {gridItems.map(({ thumb, full, image, alt }) => (
-      <a href={full.src} data-pswp-width={image.width} data-pswp-height={image.height}>
-        <img
-          src={thumb.src}
-          width={thumb.attributes.width}
-          height={thumb.attributes.height}
-          loading="lazy"
-          alt={alt}
-        />
-      </a>
-    ))}
-  </div>
-) : (
-  photos.map(({ image, alt }) => (
-    <figure class="figure figure--framed">
-      <Image src={image} alt={alt} />
-    </figure>
-  ))
-)}
+
+{
+  isGrid ? (
+    <div class="gallery" style={`--cols:${cols}`}>
+      {gridItems.map(({ thumb, full, image, alt }) => (
+        <a
+          href={full.src}
+          data-pswp-width={image.width}
+          data-pswp-height={image.height}
+        >
+          <img
+            src={thumb.src}
+            width={thumb.attributes.width}
+            height={thumb.attributes.height}
+            loading="lazy"
+            alt={alt}
+          />
+        </a>
+      ))}
+    </div>
+  ) : (
+    photos.map(({ image, alt }) => (
+      <figure class="figure figure--framed">
+        <Image src={image} alt={alt} />
+      </figure>
+    ))
+  )
+}
