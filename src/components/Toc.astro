@@ -1,0 +1,13 @@
+---
+interface Props {
+  headings: { depth: number; slug: string; text: string }[];
+}
+const { headings } = Astro.props;
+---
+<nav class="toc" aria-label="On this page">
+  <ol>
+    {headings.map(({ slug, text }) => (
+      <li><a href={'#' + slug}>{text}</a></li>
+    ))}
+  </ol>
+</nav>
