@@ -4,6 +4,7 @@ import { Image } from "astro:assets";
 import "../styles/global.css";
 import "@fontsource-variable/fraunces";
 import "@fontsource/ibm-plex-sans/400.css";
+import { kindLabel } from "../utils/kind";
 import masthead from "../assets/2026-08-20/213733-laser-light-show-over-jerusalem/215405.jpg";
 
 const allEntries = await getCollection("entries");
@@ -30,15 +31,34 @@ const firstEntry = allEntries[0];
       </header>
 
       <p class="intro">
-        This is our Israel 2026 Blog that I Chaim Peck, am reconstructing from
-        photos, notes, and memories throughout our trip. I will be updating this
-        periodically with a new entry, memory, or set of pictures, all dated
-        according to the day that they happened. The entries that start with
-        "Journal:" are accounts of things that I wrote while in Israel, with
-        very minor spelling or grammar updates, sometimes. In those entries, I
-        use [brackets] for anything that I am adding at the time of writing
-        after the trip. You can check back here for updates.
+        This is our Israel 2026 blog, which I, Chaim Peck, am reconstructing
+        from photos, notes, and memories throughout our trip. I update it
+        periodically with a new entry, memory, or set of pictures, each dated
+        according to the day it happened. Check back here for updates.
       </p>
+
+      <div class="intro">
+        <p>Entries come in a few kinds, marked with a label under each title:</p>
+        <ul>
+          <li>
+            <strong>From my journal</strong> entries are what I wrote while I
+            was in Israel, with only very minor spelling or grammar fixes.<br/>
+            <span class="aside-example">In
+            those, anything in a shaded note like this was added later,
+            after the trip, as I put the entry together.</span> 
+          </li>
+          <li>
+            <strong>Written from memory</strong> entries are written afterwards
+            from my photos and recollections, without a journal to draw on (or a very short journal entry from the day).
+          </li>
+          <li>
+            Entries labeled <strong>By</strong> someone else are written by
+            members of the family in their own words (dated for the day they describe, with a note on
+            when they were written), sometimes alongside a link to where they were
+            originally posted.
+          </li>
+        </ul>
+      </div>
 
       {
         firstEntry && (
@@ -55,8 +75,17 @@ const firstEntry = allEntries[0];
           allEntries.map((entry) => (
             <li>
               <a href={`${base}/entries/${entry.id}`}>
-                {entry.data.cover && <Image src={entry.data.cover} alt="" />}
+                {entry.data.cover && (
+                  <Image
+                    src={entry.data.cover}
+                    alt=""
+                    style={entry.data.coverPosition ? `object-position:${entry.data.coverPosition}` : undefined}
+                  />
+                )}
                 <h2>{entry.data.title}</h2>
+                <span class={`kind-badge kind-${entry.data.kind}`}>
+                  {kindLabel(entry.data.kind, entry.data.author)}
+                </span>
                 <time datetime={entry.data.date.toISOString()}>
                   {entry.data.date.toLocaleDateString("en-US", {
                     year: "numeric",

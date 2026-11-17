@@ -1,5 +1,8 @@
 ---
 import { getCollection, render } from 'astro:content';
+import Paragraph from '../../components/Paragraph.astro';
+import Aside from '../../components/Aside.astro';
+import ListItem from '../../components/ListItem.astro';
 import EntryLayout from '../../layouts/EntryLayout.astro';
 
 export async function getStaticPaths() {
@@ -19,5 +22,5 @@ const { Content, headings } = await render(entry);
 const h2s = headings.filter((h) => h.depth === 2);
 ---
 <EntryLayout data={entry.data} headings={h2s} prev={prev} next={next}>
-  <Content />
+  <Content components={{ p: Paragraph, li: ListItem, Aside }} />
 </EntryLayout>

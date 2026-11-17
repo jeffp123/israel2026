@@ -113,3 +113,27 @@ footer{grid-column:text;color:var(--text-dim);font-size:.9rem;border-top:1px sol
   margin-top:var(--size-9);padding-block:var(--size-5) var(--size-8)}
 .entry-nav+footer{border-top:0;margin-top:var(--size-5)}
 section::after{content:"";display:block;clear:both}
+
+/* Entry kind badge: journal (written in Israel) vs. recollection (written later) */
+.kind-badge{display:inline-block;width:fit-content;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;
+  padding:.15em .65em;border-radius:999px;border:1px solid var(--rule);color:var(--text-dim);margin-top:var(--size-2)}
+.kind-journal{color:var(--brass);border-color:var(--brass);background:var(--brass-soft)}
+
+/* [Bracketed] paragraphs: things added after the trip, inside a journal entry */
+.prose p.aside,.prose li.aside,.prose div.aside{margin-block:var(--size-4);padding:var(--size-2) var(--size-4);border-left:3px solid var(--brass);
+  background:var(--bg-raised);color:var(--text-dim);font-size:.95em;border-radius:0 4px 4px 0}
+.aside-example{padding:0 .3em;border-left:3px solid var(--brass);background:var(--bg-raised);color:var(--text-dim);border-radius:0 3px 3px 0}
+.intro ul{padding-left:1.25em;margin-top:var(--size-3)} .intro li+li{margin-top:var(--size-2)}
+.prose div.aside p{margin:0} .prose div.aside p+p{margin-top:var(--size-3)}
+.kind-family{color:var(--text);border-color:var(--text-dim)}
+.written-note{color:var(--text-dim);font-size:.95rem;font-style:italic;margin-bottom:var(--size-5)}
+
+/* Home-page entries as cards, so each photo is clearly grouped with its own title */
+.entry-list{gap:var(--size-6)}
+.entry-list li{background:var(--bg-raised);border:1px solid var(--rule);border-radius:6px;overflow:hidden;
+  transition:border-color .15s}
+.entry-list li:hover,.entry-list li:focus-within{border-color:var(--brass)}
+.entry-list a{padding-bottom:var(--size-4)}
+.entry-list a>*:not(img){margin-inline:var(--size-4)}
+.entry-list a>img{width:100%;border-radius:0;margin-bottom:var(--size-1)}
+.entry-list a>p{margin-top:0}

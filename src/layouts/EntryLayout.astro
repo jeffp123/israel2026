@@ -12,6 +12,7 @@ import "swiper/css/pagination";
 import { Image } from "astro:assets";
 import Toc from "../components/Toc.astro";
 import type { ImageMetadata } from "astro";
+import { kindLabel } from "../utils/kind";
 
 interface EntryRef {
   id: string;
@@ -24,7 +25,12 @@ interface Props {
     date: Date;
     location?: string;
     dek?: string;
+    kind?: "journal" | "recollection" | "family";
+    author?: string;
+    written?: Date;
+    source?: string;
     cover?: ImageMetadata;
+    coverPosition?: string;
   };
   headings: { depth: number; slug: string; text: string }[];
   prev?: EntryRef | null;
@@ -35,6 +41,19 @@ const { data, headings, prev, next } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const dateStr = data.date.toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
+});
+const label = kindLabel(data.kind, data.author);
+const sourceName = data.source
+  ? new URL(data.source).hostname
+      .replace(/^www\./, "")
+      .split(".")[0]
+      .replace(/^./, (c) => c.toUpperCase())
+  : "";
+const writtenStr = data.written?.toLocaleDateString("en-US", {
   year: "numeric",
   month: "long",
   day: "numeric",
@@ -53,11 +72,20 @@ const kicker = [data.location, dateStr].filter(Boolean).join(" · ");
   <body>
     <main class="prose">
       <header class="hero">
-        {data.cover && <Image src={data.cover} alt="" />}
+        {
+          data.cover && (
+            <Image
+              src={data.cover}
+              alt=""
+              style={data.coverPosition ? `object-position:${data.coverPosition}` : undefined}
+            />
+          )
+        }
         <div class="hero-caption">
           <a class="home-link" href={`${base}/`}>Peck Family in Israel 2026</a>
           {kicker && <p class="kicker">{kicker}</p>}
           <h1 class="entry-title">{data.title}</h1>
+          <p class={`kind-badge kind-${data.kind ?? "recollection"}`}>{label}</p>
           {data.dek && <p class="dek">{data.dek}</p>}
         </div>
       </header>
@@ -76,7 +104,23 @@ const kicker = [data.location, dateStr].filter(Boolean).join(" · ");
         )
       }
 
+      {
+        (writtenStr || data.source) && (
+          <p class="written-note">
+            {data.source ? `Posted on ${sourceName}` : "Written"}
+            {writtenStr && ` on ${writtenStr}`}
+            {data.source && (
+              <>
+                {" · "}
+                <a href={data.source}>Read the original →</a>
+              </>
+            )}
+          </p>
+        )
+      }
+
       <slot />
+
 
       {
         (prev || next) && (

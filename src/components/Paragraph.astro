@@ -1,0 +1,5 @@
+---
+import { parseAside } from '../utils/aside';
+const { html, aside } = parseAside(await Astro.slots.render('default'));
+---
+<p class:list={[{ aside }]} set:html={html} />
